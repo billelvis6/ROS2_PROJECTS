@@ -1,1 +1,34 @@
 
+ROS2, Rviz et Gazebo étant déjà installés, il ne reste qu'à y ajouter les packages manquants
+
+mise à jour:
+📋
+
+  user@user:~$ sudo apt update
+  user@user:~$ sudo apt upgrade
+                
+teleop_joy:
+📋
+
+  user@user:~$ sudo apt install ros-humble-teleop-twist-joy
+                
+robot_localization:
+📋
+
+  user@user:~$ sudo apt install ros-humble-robot-localization
+                
+rqt:
+📋
+
+  user@user:~$ sudo apt install ros-humble-rqt*
+                
+SLAM_toolbox:
+📋
+
+  user@user:~$ sudo apt install ros-humble-slam-toolbox
+                
+Nav2:
+📋
+
+  user@user:~$ sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
+                

@@ -1,0 +1,205 @@
+# ==============================================================================
+# CONFIGURATION NAV2 - RASPBERRY PI 4 - YAHBOOM X3 (MECANUM)
+# Dimensions totales : 40cm (L) x 20cm (l) | Ramasseur inclus
+# Stratégie : Optimisation CPU, Agilité Mecanum, Sécurité 17cm.
+# ==============================================================================
+
+amcl:
+  ros__parameters:
+    use_sim_time: False
+    alpha1: 0.2
+    alpha2: 0.2
+    alpha3: 0.2
+    alpha4: 0.2
+    alpha5: 0.2
+    base_frame_id: "base_footprint"
+    global_frame_id: "map"
+    odom_frame_id: "odom"
+    scan_topic: scan
+    set_initial_pose: false
+    
+    # MODÈLE OMNI : Indispensable pour les roues Mecanum
+    robot_model_type: "nav2_amcl::OmniMotionModel"
+
+    # OPTIMISATION PI 4 : Particules réduites pour soulager le CPU
+    max_particles: 500 
+    min_particles: 100
+    tf_broadcast: true
+    transform_tolerance: 2.5 # Tolérance augmentée pour éviter les lags sur Pi 4
+    
+    update_min_a: 0.2 
+    update_min_d: 0.2 
+    
+    # PARAMÈTRES LASER
+    laser_model_type: "likelihood_field"
+    laser_likelihood_max_dist: 2.0
+    laser_max_range: 12.0
+    laser_min_range: 0.15 # Évite de détecter le propre châssis du robot
+
+controller_server:
+  ros__parameters:
+    use_sim_time: False
+    controller_frequency: 15.0 # Réduit de 20 à 15 pour économiser le CPU de la Pi 4
+    min_x_velocity_threshold: 0.001
+    min_y_velocity_threshold: 0.001
+    min_theta_velocity_threshold: 0.001
+    failure_tolerance: 0.3
+    progress_checker_plugin: "progress_checker"
+    goal_checker_plugins: ["general_goal_checker"]
+    controller_plugins: ["FollowPath"]
+
+    progress_checker:
+      plugin: "nav2_controller::SimpleProgressChecker"
+      required_movement_radius: 0.05
+      movement_time_allowance: 10.0
+
+    general_goal_checker:
+      stateful: True
+      plugin: "nav2_controller::SimpleGoalChecker"
+      xy_goal_tolerance: 0.05 # Tolérance réaliste (5cm)
+      yaw_goal_tolerance: 0.1
+
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      # VITESSES SPRINT MECANUM
+      min_vel_x: -0.20
+      max_vel_x: 0.45
+      min_vel_y: -0.25 # Vitesse latérale
+      max_vel_y: 0.25
+      max_speed_xy: 0.45
+      max_vel_theta: 0.8 # Vitesse de rotation limitée à cause de la longueur du ramasseur
+      acc_lim_x: 1.5
+      acc_lim_y: 1.0
+      acc_lim_theta: 1.5
+      
+      # CRITICS : "Twirling" activé pour exploiter le mouvement latéral
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist", "Twirling"]
+      PathAlign.scale: 40.0 # Force le robot à rester bien sur sa ligne
+      Twirling.scale: 1.0   # Autorise le "strafe" (glissement latéral)
+      BaseObstacle.scale: 0.02 
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      update_frequency: 5.0
+      publish_frequency: 2.0
+      global_frame: odom
+      robot_base_frame: "base_footprint"
+      rolling_window: true
+      width: 3
+      height: 3
+      resolution: 0.05
+      # FOOTPRINT : Centre = Axe roues. Avant = +30cm (10cm corps + 20cm ramasseur). Arrière = -10cm.
+      footprint: "[ [0.30, 0.10], [0.30, -0.10], [-0.10, -0.10], [-0.10, 0.10] ]"
+      
+      # OPTIMISATION : ObstacleLayer au lieu de VoxelLayer (Beaucoup moins de CPU)
+      plugins: ["obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 0.25
+          data_type: "LaserScan"
+          clearing: True
+          marking: True
+      
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        # MARGE DE SÉCURITÉ : 17cm demandés
+        inflation_radius: 0.17 
+        cost_scaling_factor: 8.0 # Robot plus "courageux" pour s'approcher des 17cm
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
+      global_frame: map
+      robot_base_frame: "base_footprint"
+      footprint: "[ [0.30, 0.10], [0.30, -0.10], [-0.10, -0.10], [-0.10, 0.10] ]"
+      resolution: 0.05
+      track_unknown_space: true
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.35 # Marge globale pour planifier des trajectoires larges
+        cost_scaling_factor: 3.0
+
+planner_server:
+  ros__parameters:
+    expected_planner_frequency: 5.0
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner/NavfnPlanner"
+      tolerance: 0.1
+      use_astar: true 
+      allow_unknown: true
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: False
+    global_frame: map
+    robot_base_frame: "base_footprint"
+    odom_topic: /odometry/filtered
+    bt_loop_duration: 10
+    default_server_timeout: 20
+    # Liste corrigée (retrait de nav2_is_stalled_condition_bt_node)
+    plugin_lib_names:
+      - nav2_compute_path_to_pose_action_bt_node
+      - nav2_compute_path_through_poses_action_bt_node
+      - nav2_follow_path_action_bt_node
+      - nav2_back_up_action_bt_node
+      - nav2_spin_action_bt_node
+      - nav2_wait_action_bt_node
+      - nav2_clear_costmap_service_bt_node
+      - nav2_is_stuck_condition_bt_node
+      - nav2_goal_reached_condition_bt_node
+      - nav2_goal_updated_condition_bt_node
+      - nav2_initial_pose_received_condition_bt_node
+      - nav2_reconfigure_node_action_bt_node
+      - nav2_pipeline_sequence_bt_node
+      - nav2_round_robin_bt_node
+      - nav2_transform_available_condition_bt_node
+      - nav2_time_expired_condition_bt_node
+      - nav2_distance_controller_bt_node
+      - nav2_distance_travelled_condition_bt_node
+      - nav2_single_trigger_bt_node
+      - nav2_navigate_through_poses_action_bt_node
+      - nav2_navigate_to_pose_action_bt_node
+      - nav2_remove_passed_goals_action_bt_node
+      - nav2_planner_selector_bt_node
+      - nav2_controller_selector_bt_node
+      - nav2_goal_checker_selector_bt_node
+      - nav2_recovery_node_bt_node
+
+behavior_server:
+  ros__parameters:
+    behavior_plugins: ["spin", "backup", "wait"]
+    spin:
+      plugin: "nav2_behaviors/Spin"
+    backup:
+      plugin: "nav2_behaviors/BackUp"
+    wait:
+      plugin: "nav2_behaviors/Wait"
+    global_frame: odom
+    robot_base_frame: "base_footprint"
+
+velocity_smoother:
+  ros__parameters:
+    smoothing_frequency: 15.0
+    max_velocity: [0.45, 0.25, 0.8]
+    min_velocity: [-0.20, -0.25, -0.8]
+    max_accel: [1.5, 1.0, 1.5]
+
+map_server:
+  ros__parameters:
+    yaml_filename: "map_win.yaml"
+
+lifecycle_manager: # Nom aligné avec ton fichier x3_nav.launch.py
+  ros__parameters:
+    autostart: True
+    # Liste synchronisée avec ton code Launch (on ne liste que ce qui est lancé)
+    node_names: ['map_server', 'amcl', 'planner_server', 'controller_server', 'bt_navigator']

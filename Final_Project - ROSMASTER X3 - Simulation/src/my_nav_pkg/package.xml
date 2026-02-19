@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>my_nav_pkg</name>
+  <version>0.1.0</version>
+  <description>Navigation, SLAM, RViz launcher for X3 robot</description>
+  <maintainer email="ton.email@example.com">Ton Nom</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- Dependencies pour ROS2 -->
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <depend>rclpy</depend>
+  <depend>launch</depend>
+  <depend>launch_ros</depend>
+  <depend>nav2_bringup</depend>
+  <depend>nav2_map_server</depend>
+  <depend>nav2_amcl</depend>
+  <depend>slam_toolbox</depend>
+  <depend>rviz2</depend>
+
+  <!-- Tests optionnels -->
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>
+

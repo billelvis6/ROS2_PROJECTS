@@ -1,0 +1,103 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rosmaster_x3">
+
+    <xacro:property name="M_PI" value="3.1415926535897931" />
+    <xacro:property name="wheel_radius" value="0.0325" /> 
+    <xacro:property name="base_length" value="0.300" />
+    <xacro:property name="base_width" value="0.1386" /> 
+
+
+    <xacro:arg name="robot_name" default="rosmaster_x3"/>
+    <xacro:arg name="prefix" default=""/>
+    <xacro:arg name="use_gazebo" default="true"/>
+
+    <xacro:include filename="$(find x3_description)/urdf/mech/rosmaster_x3_base.urdf.xacro"/>
+    <xacro:include filename="$(find x3_description)/urdf/mech/mecanum_wheel.urdf.xacro"/>
+    <xacro:include filename="$(find x3_description)/urdf/sensors/rgbd_camera.urdf.xacro"/>
+    <xacro:include filename="$(find x3_description)/urdf/sensors/lidar.urdf.xacro"/>
+    <xacro:include filename="$(find x3_description)/urdf/sensors/imu.urdf.xacro"/>
+
+    <xacro:rosmaster_x3_base prefix="$(arg prefix)"/>
+
+    <xacro:mecanum_wheel
+      prefix="$(arg prefix)"
+      side="front_left"
+      x_reflect="1"
+      y_reflect="1"/>
+
+    <xacro:mecanum_wheel
+      prefix="$(arg prefix)"
+      side="front_right"
+      x_reflect="1"
+      y_reflect="-1"/>
+
+    <xacro:mecanum_wheel
+      prefix="$(arg prefix)"
+      side="back_left"
+      x_reflect="-1"
+      y_reflect="1"/>
+
+    <xacro:mecanum_wheel
+      prefix="$(arg prefix)"
+      side="back_right"
+      x_reflect="-1"
+      y_reflect="-1"/>
+
+    <xacro:rgbd_camera
+      prefix="$(arg prefix)"
+      camera_name="camera"
+      xyz_offset="0.105 0 0.05"
+      rpy_offset="0 0 0"/>
+
+    <xacro:lidar_sensor
+      prefix="$(arg prefix)"
+      parent="base_link"
+      frame_id="laser_frame"
+      xyz_offset="0 0 0.0825"
+      rpy_offset="0 0 0"
+      mesh_xyz_offset="0 0 0"
+      mesh_rpy_offset="${-M_PI/2} 0 0"
+      topic_name="scan"/>
+
+    <xacro:imu_sensor
+      prefix="$(arg prefix)"
+      parent="base_link"
+      frame_id="imu"
+      xyz_offset="0 0 0.006"
+      rpy_offset="0 0 0"
+      update_rate="15.0"
+      topic_name="imu/data"/>
+    
+
+  <gazebo>
+      <plugin name="mecanum_controller" filename="libgazebo_ros_planar_move.so">
+          <robotNamespace>/</robotNamespace>
+          <commandTopic>cmd_vel</commandTopic>
+          <odometryTopic>odom</odometryTopic>
+          <odometryFrame>odom</odometryFrame>
+          <leftFrontJoint>front_left_joint</leftFrontJoint>
+          <rightFrontJoint>front_right_joint</rightFrontJoint>
+          <leftRearJoint>back_left_joint</leftRearJoint>
+          <rightRearJoint>back_right_joint</rightRearJoint>
+          <odometryRate>60.0</odometryRate>
+          <robotBaseFrame>base_link</robotBaseFrame>
+      </plugin>
+    </gazebo>
+
+  <gazebo>
+      <plugin name="p3d_base_controller" filename="libgazebo_ros_p3d.so">
+          <ros>
+              <!-- Add namespace and remap the default topic -->
+              <namespace>$(arg robot_name)</namespace>
+              <remapping>odom:=p3d_ground_truth</remapping>
+          </ros>
+          <always_on>true</always_on>
+          <update_rate>30.0</update_rate>
+          <body_name>base_footprint</body_name>
+          <gaussian_noise>0.00</gaussian_noise>
+          <frame_name>world</frame_name>
+      </plugin>
+    </gazebo>
+
+
+</robot>

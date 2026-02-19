@@ -1,7 +1,7 @@
 
 # ROS2 Projects Repository
 
-Bienvenue dans le dépôt principal des projets ROS2 réalisés par **Billelvis Somakou**.  
+Bienvenue dans le dépôt principal des projets ROS2 réalisés par **Bill-Elvis SOMAKOU** Lors de la TEKBOT ROBOTIC CHALLENGE 2025.  
 Ce dépôt rassemble plusieurs expérimentations et projets pédagogiques autour de ROS2 Humble, incluant la simulation, la navigation autonome et la communication inter-nodes.
 
 

@@ -195,4 +195,4 @@ This project demonstrates practical skills required in:
 ## Author
 
 **B2MS CleanTech Team**
-Tekbot Robotics Challenge 2025
+Tekbot Robotics Challenge 2025 by Bill-Elvis SOMAKOU

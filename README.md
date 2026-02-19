@@ -12,14 +12,14 @@ Ce dépôt rassemble plusieurs expérimentations et projets pédagogiques autour
    - Package ROS2 C++ simulant des capteurs environnementaux.
    - Fonctionnalités : publication de données (température, humidité, pression) et évaluation en temps réel via un subscriber.
    - Node publisher + subscriber + fichier de lancement XML.
-   - [Voir le projet complet](sensor_data_evaluation/README.md)
+   
 
 2. **TRC ROSMaster X3 Simulation**
    - Simulation d’un robot X3 dans Gazebo.
    - Navigation autonome avec SLAM, RViz et Nav2.
    - Détection de QR codes pour positionnement et collecte de données.
    - Includes nodes de téléopération, QR detection et mapping.
-   - [Voir le projet complet](sim_trc/README.md)
+
 
 3. **Autres projets ROS2**
    - Expérimentations sur la commande de servomoteurs.

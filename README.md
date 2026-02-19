@@ -90,10 +90,8 @@ source install/setup.bash
 * [Nav2 Documentation](https://navigation.ros.org/)
 
 
-**Auteur :** Billelvis Somakou
+**Auteur :** Bill-Elvis SOMAKOU
 **Année :** 2025
 **Licence :** MIT
 
-```
 
-✅ Ce README **donne une vue globale**, montre ton travail et crée un lien clair vers chaque projet.  
